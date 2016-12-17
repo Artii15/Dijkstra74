@@ -9,26 +9,17 @@ import dijkstra.messages.{NeighbourAck, NextAnnouncement, NodeDisturbance, NodeS
 import scala.util.Random
 
 abstract class DijkstraActor(id: Int, config: RingConfig) extends Actor {
-  private var state = 0
-  private var next: Option[ActorRef] = None
-  private val random: Random = new Random(new Date().getTime - id)
+  protected var state = 0
+  protected var next: Option[ActorRef] = None
+  protected val random: Random = new Random(new Date().getTime - id)
 
   override def receive: Receive = {
-    case NodeState(neighbourState) => receiveNeighbourState(neighbourState)
+    case NodeState(neighbourState) => onStateReceive(neighbourState)
     case NextAnnouncement(neighbour) => receiveNext(neighbour)
     case NodeDisturbance => state = random.nextInt(config.K)
   }
 
-  private def receiveNeighbourState(neighbourState: Int): Unit = {
-    state = recalculateState(state, neighbourState)
-    showState(state, neighbourState)
-    Thread.sleep(500)
-    next.foreach(_ ! NodeState(state))
-  }
-
-  protected def showState(state: Int, neighbourState: Int): Unit
-
-  protected def recalculateState(oldState: Int, neighbourState: Int): Int
+  protected def onStateReceive(neighbourState: Int): Unit
 
   private def receiveNext(neighbour: ActorRef): Unit = {
     next = Some(neighbour)
