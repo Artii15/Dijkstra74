@@ -2,7 +2,7 @@ package dijkstra.actors
 
 import akka.actor.{Actor, ActorRef, Props}
 import dijkstra.config.RingConfig
-import dijkstra.messages.{NeighbourAck, NextAnnouncement, NodeState, Start}
+import dijkstra.messages._
 
 class RingSupervisor(config: RingConfig) extends Actor {
   private var nodes:List[ActorRef] = Nil
@@ -11,12 +11,13 @@ class RingSupervisor(config: RingConfig) extends Actor {
   override def receive: Receive = {
     case Start => init()
     case NeighbourAck => receiveNeighbourAck()
+    case NodeDisturbance => context.children.foreach(_ ! NodeDisturbance)
   }
 
   private def init(): Unit = {
     val distinguishedNode = context.actorOf(Props(classOf[DistinguishedActor], 1, config))
     val ordinaryNodes = Range.inclusive(2, config.numberOfNodes)
-      .map(nodeId => context.actorOf(Props(classOf[OrdinaryActor], nodeId)))
+      .map(nodeId => context.actorOf(Props(classOf[OrdinaryActor], nodeId, config)))
 
     val lastOrdinaryNode = ordinaryNodes.foldLeft(distinguishedNode){ (previous, current) => {
       previous ! NextAnnouncement(current); current
