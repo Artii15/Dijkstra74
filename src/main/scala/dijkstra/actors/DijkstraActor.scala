@@ -5,7 +5,7 @@ import dijkstra.config.RingConfig
 import dijkstra.messages.{NeighbourAck, NextAnnouncement, NodeState}
 
 abstract class DijkstraActor(id: Int, ringConfig: RingConfig) extends Actor {
-  protected var state = 0
+  private var state = 0
   private var next: Option[ActorRef] = None
 
   override def receive: Receive = {
@@ -14,11 +14,13 @@ abstract class DijkstraActor(id: Int, ringConfig: RingConfig) extends Actor {
   }
 
   private def receiveNeighbourState(neighbourState: Int): Unit = {
+    showState(state)
     state = recalculateState(state, neighbourState)
-    print(s"$state ")
     Thread.sleep(1000)
     next.foreach(_ ! NodeState(state))
   }
+
+  protected def showState(oldState: Int): Unit
 
   protected def recalculateState(oldState: Int, neighbourState: Int): Int
 
