@@ -6,6 +6,8 @@ import akka.actor.{Actor, ActorRef, Props}
 import dijkstra.config.RingConfig
 import dijkstra.messages._
 
+import scala.annotation.tailrec
+import scala.io.StdIn
 import scala.util.Random
 
 class RingSupervisor(config: RingConfig) extends Actor {
@@ -38,6 +40,18 @@ class RingSupervisor(config: RingConfig) extends Actor {
 
   private def receiveNeighbourAck(): Unit = {
     numberOfUninitializedNodes -= 1
-    if(numberOfUninitializedNodes == 0) dijkstraActors.head ! NodeState(0)
+    if(numberOfUninitializedNodes == 0) {
+      dijkstraActors.head ! NodeState(0)
+      interactWithUser()
+    }
+  }
+
+  @tailrec
+  private def interactWithUser(): Unit = {
+    val command = StdIn.readLine()
+    if(command != "q") {
+      dijkstraActors.foreach(_ ! ForcedStateChange(random.nextInt(config.K)))
+      interactWithUser()
+    }
   }
 }
