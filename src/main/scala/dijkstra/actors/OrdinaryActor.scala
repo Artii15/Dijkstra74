@@ -2,7 +2,7 @@ package dijkstra.actors
 
 import akka.actor.ActorRef
 
-class OrdinaryActor(id: Int, consumer: ActorRef) extends DijkstraActor(id, consumer) {
+class OrdinaryActor(consumer: ActorRef) extends DijkstraActor(consumer) {
 
   override protected def hasPermission(neighbourState: Int): Boolean = state != neighbourState
 

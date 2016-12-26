@@ -3,7 +3,7 @@ package dijkstra.actors
 import akka.actor.{Actor, ActorRef}
 import dijkstra.messages.{NeighbourAck, NextAnnouncement, NodeState}
 
-abstract class DijkstraActor(id: Int, permissionConsumer: ActorRef) extends Actor {
+abstract class DijkstraActor(permissionConsumer: ActorRef) extends Actor {
   protected var state = 0
   private var next: Option[ActorRef] = None
 
