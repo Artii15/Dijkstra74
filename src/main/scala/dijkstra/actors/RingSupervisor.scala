@@ -5,6 +5,7 @@ import java.util.Date
 import akka.actor.{Actor, ActorRef, Props}
 import dijkstra.config.RingConfig
 import dijkstra.messages._
+import misra.demo.Writer
 
 import scala.annotation.tailrec
 import scala.io.StdIn
@@ -42,16 +43,16 @@ class RingSupervisor(config: RingConfig) extends Actor {
     numberOfUninitializedNodes -= 1
     if(numberOfUninitializedNodes == 0) {
       dijkstraActors.head ! NodeState(0)
+      Writer.clearScreen()
       interactWithUser()
     }
   }
 
   @tailrec
   private def interactWithUser(): Unit = {
-    val command = StdIn.readLine()
-    if(command != "q") {
-      dijkstraActors.foreach(_ ! ForcedStateChange(random.nextInt(config.K)))
-      interactWithUser()
+    StdIn.readLine() match {
+      case "q" => context.system.terminate()
+      case _ => dijkstraActors.foreach(_ ! ForcedStateChange(random.nextInt(config.K))); interactWithUser()
     }
   }
 }

@@ -2,6 +2,7 @@ package dijkstra.actors
 
 import akka.actor.{Actor, ActorRef}
 import dijkstra.messages.{Privilege, StateReport}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.duration.FiniteDuration
 
