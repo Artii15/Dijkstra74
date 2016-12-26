@@ -1,23 +1,11 @@
 package dijkstra.actors
 
+import akka.actor.ActorRef
 import dijkstra.config.RingConfig
-import dijkstra.messages.NodeState
 
-class DistinguishedActor(id: Int, config: RingConfig) extends DijkstraActor(id, config) {
+class DistinguishedActor(id: Int, consumer: ActorRef, config: RingConfig) extends DijkstraActor(id, consumer) {
 
-  override protected def onStateReceive(neighbourState: Int): Unit = {
-    showState(state, neighbourState)
-    Thread.sleep(500)
-    state = recalculateState(state, neighbourState)
-    next.foreach(_ ! NodeState(state))
-  }
+  override protected def hasPermission(neighbourState: Int): Boolean = state == neighbourState
 
-  private def recalculateState(oldState: Int, neighbourState: Int): Int =
-    if (oldState == neighbourState) (oldState + 1) % config.K else oldState
-
-  private def showState(state: Int, neighbourState: Int): Unit = {
-    println(s"${Console.RESET}")
-    print(s"${if (state != neighbourState) Console.CYAN_B else Console.RED_B}$state")
-    Console.flush()
-  }
+  override protected def calculateNewState(neighbourState: Int): Int = (state + 1) % config.K
 }

@@ -1,17 +1,21 @@
 package dijkstra.actors
 
+import java.util.Date
+
 import akka.actor.{Actor, ActorRef, Props}
 import dijkstra.config.RingConfig
 import dijkstra.messages._
 
+import scala.util.Random
+
 class RingSupervisor(config: RingConfig) extends Actor {
-  private var nodes:List[ActorRef] = Nil
+  private var nodes: List[ActorRef] = Nil
   private var numberOfUninitializedNodes = config.numberOfNodes
+  private val random: Random = new Random(new Date().getTime)
 
   override def receive: Receive = {
     case Start => init()
     case NeighbourAck => receiveNeighbourAck()
-    case NodeDisturbance => context.children.foreach(_ ! NodeDisturbance)
   }
 
   private def init(): Unit = {

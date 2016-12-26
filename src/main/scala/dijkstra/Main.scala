@@ -1,33 +1,17 @@
 package dijkstra
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import dijkstra.actors.RingSupervisor
 import dijkstra.config.RingConfig
-import dijkstra.messages.{NodeDisturbance, Start}
+import dijkstra.messages.Start
 
-import scala.annotation.tailrec
-import scala.io.StdIn
 
 object Main {
-  def main(args: Array[String]): Unit = new Main().run()
-}
 
-class Main {
-  private val actorSystem = ActorSystem()
-  private val config = new RingConfig(100, 10)
-  private val supervisor = actorSystem.actorOf(Props(new RingSupervisor(config)))
-
-  def run(): Unit = {
+  def main(args: Array[String]): Unit = {
+    val actorSystem = ActorSystem()
+    val config = new RingConfig(10, 10)
+    val supervisor = actorSystem.actorOf(Props(new RingSupervisor(config)))
     supervisor ! Start
-    interact()
-  }
-
-  @tailrec
-  private def interact(): Unit = {
-    StdIn.readLine() match {
-      case "1" => supervisor ! NodeDisturbance; interact()
-      case "2" => actorSystem.terminate()
-      case _ => interact()
-    }
   }
 }
