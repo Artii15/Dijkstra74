@@ -9,7 +9,7 @@ import dijkstra.messages._
 import scala.util.Random
 
 class RingSupervisor(config: RingConfig) extends Actor {
-  private var nodes: List[ActorRef] = Nil
+  private var dijkstraActors: List[ActorRef] = Nil
   private var numberOfUninitializedNodes = config.numberOfNodes
   private val random: Random = new Random(new Date().getTime)
 
@@ -19,19 +19,25 @@ class RingSupervisor(config: RingConfig) extends Actor {
   }
 
   private def init(): Unit = {
-    val distinguishedNode = context.actorOf(Props(classOf[DistinguishedActor], 1, config))
-    val ordinaryNodes = Range.inclusive(2, config.numberOfNodes)
-      .map(nodeId => context.actorOf(Props(classOf[OrdinaryActor], nodeId, config)))
+    val logger = context.actorOf(Props[StateLogger])
 
-    val lastOrdinaryNode = ordinaryNodes.foldLeft(distinguishedNode){ (previous, current) => {
+    val distinguishedConsumer = context.actorOf(Props(classOf[PrivilegeConsumer], 1, logger))
+    val distinguishedDijkstraActor = context.actorOf(Props(classOf[DistinguishedActor], distinguishedConsumer, config))
+
+    val ordinaryDijkstraActors = Range.inclusive(2, config.numberOfNodes).map(consumerId => {
+      val consumer = context.actorOf(Props(classOf[PrivilegeConsumer], consumerId, logger))
+      context.actorOf(Props(classOf[OrdinaryActor], consumer))
+    })
+
+    val lastOrdinaryNode = ordinaryDijkstraActors.foldLeft(distinguishedDijkstraActor){ (previous, current) => {
       previous ! NextAnnouncement(current); current
     }}
-    lastOrdinaryNode ! NextAnnouncement(distinguishedNode)
-    nodes = distinguishedNode :: ordinaryNodes.toList
+    lastOrdinaryNode ! NextAnnouncement(distinguishedDijkstraActor)
+    dijkstraActors = distinguishedDijkstraActor :: ordinaryDijkstraActors.toList
   }
 
   private def receiveNeighbourAck(): Unit = {
     numberOfUninitializedNodes -= 1
-    if(numberOfUninitializedNodes == 0) nodes.head ! NodeState(0)
+    if(numberOfUninitializedNodes == 0) dijkstraActors.head ! NodeState(0)
   }
 }
