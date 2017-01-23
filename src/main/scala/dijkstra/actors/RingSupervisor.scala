@@ -42,8 +42,8 @@ class RingSupervisor(config: RingConfig) extends Actor {
   private def receiveNeighbourAck(): Unit = {
     numberOfUninitializedNodes -= 1
     if(numberOfUninitializedNodes == 0) {
-      dijkstraActors.head ! NodeState(0)
       Writer.clearScreen()
+      dijkstraActors.head ! NodeState(0)
       interactWithUser()
     }
   }
